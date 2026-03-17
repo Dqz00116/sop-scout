@@ -1,9 +1,6 @@
 {
     "llm": {
-        "provider": "moonshot",
-        "model": "kimi-k2-turbo-preview",
-        "api_key": "${LLM_API_KEY}",
-        "base_url": "https://api.moonshot.cn/v1"
+        "model": "kimi-k2-turbo"
     },
     "generation": {
         "temperature": 0.3,

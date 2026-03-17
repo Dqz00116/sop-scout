@@ -1,30 +1,50 @@
 # LLM Provider 预设配置
-# 可通过环境变量覆盖任何值
+# 用户只需在 extract_sop_cfg.json 的 llm.model 中指定模型名称
 
 moonshot:
   name: "Moonshot AI (Kimi)"
   api_key_env: "LLM_API_KEY"
   base_url: "https://api.moonshot.cn/v1"
   models:
-    k2-turbo: "kimi-k2-turbo-preview"
-    k2: "kimi-k2-0711-preview"
-    k1.5: "kimi-k1.5-long"
+    kimi-k2-turbo:
+      id: "kimi-k2-turbo-preview"
+      description: "Kimi K2 Turbo - 快速响应"
+    kimi-k2:
+      id: "kimi-k2-0711-preview"
+      description: "Kimi K2 - 标准版"
+    kimi-k1.5:
+      id: "kimi-k1.5-long"
+      description: "Kimi K1.5 - 长文本"
 
 doubao:
   name: "Doubao (Volcengine)"
   api_key_env: "ARK_API_KEY"
   base_url: "https://ark.cn-beijing.volces.com/api/v3"
   models:
-    seed-2-0-pro: "doubao-seed-2-0-pro-260215"
-    seed-1-6: "doubao-seed-1-6-250615"
-    pro-1-5: "doubao-pro-1-5-250328"
-    lite-1-5: "doubao-lite-1-5-250328"
-    vision-1-5: "doubao-vision-1-5-250328"
+    doubao-seed-2-0-pro:
+      id: "doubao-seed-2-0-pro-260215"
+      description: "Doubao Seed 2.0 Pro - 专业版"
+    doubao-seed-1-6:
+      id: "doubao-seed-1-6-250615"
+      description: "Doubao Seed 1.6"
+    doubao-pro-1-5:
+      id: "doubao-pro-1-5-250328"
+      description: "Doubao Pro 1.5"
+    doubao-lite-1-5:
+      id: "doubao-lite-1-5-250328"
+      description: "Doubao Lite 1.5 - 轻量版"
+    doubao-vision-1-5:
+      id: "doubao-vision-1-5-250328"
+      description: "Doubao Vision 1.5 - 视觉版"
 
 openai:
   name: "OpenAI"
   api_key_env: "OPENAI_API_KEY"
   base_url: "https://api.openai.com/v1"
   models:
-    gpt-4o: "gpt-4o"
-    gpt-4o-mini: "gpt-4o-mini"
+    gpt-4o:
+      id: "gpt-4o"
+      description: "GPT-4o"
+    gpt-4o-mini:
+      id: "gpt-4o-mini"
+      description: "GPT-4o Mini"
