@@ -1,281 +1,320 @@
-# SOP 提取工作流
+# 🎯 SOP Scout
 
-## 项目概述
+[![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
+[![LangGraph](https://img.shields.io/badge/LangGraph-1.0-orange.svg)](https://langchain-ai.github.io/langgraph/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-基于 LangGraph 的 SOP（标准操作流程）提取工作流，支持从游戏客服聊天记录中批量提取结构化的 SOP 信息，并输出符合火山引擎知识库格式标准的 JSONL 文件。
+> **从客服聊天记录中智能提取标准操作流程（SOP）的 CLI 工具**
+> 
+> A CLI tool that intelligently extracts Standard Operating Procedures (SOP) from customer service chat records
 
-### 核心功能
+[中文](#中文文档) | [English](#english-docs)
 
-- **批量处理**: 支持从 Zip 文件批量处理聊天记录
-- **多线程并发**: 使用线程池并发处理文件，大幅提升处理速度
-- **质量检测**: 自动检测聊天记录质量，拒绝噪声数据
-- **敏感信息过滤**: 自动过滤电话、身份证、密码等敏感信息
-- **SOP 提取**: 使用大语言模型智能提取结构化 SOP
-- **进度查询**: 实时查询工作流执行进度
-- **任务取消**: 支持中途取消长时间运行的任务
+---
 
-### 技术栈
+## 中文文档
 
-- Python 3.12+
-- LangGraph 1.0
-- LangChain 1.0
-- FastAPI
-- doubao-seed-2-0-pro-260215（LLM模型）
-- S3 兼容对象存储
+### 📖 项目简介
 
-### 跨平台支持
+**SOP Scout** 是一个智能的**标准操作流程（SOP）提取工具**，专门用于从游戏客服聊天记录中自动挖掘和结构化有价值的知识资产。
 
-本项目支持 **Linux** 和 **Windows** 系统，自动处理跨平台兼容性问题。
+在客服场景中，大量有价值的处理经验分散在海量的聊天记录中。SOP Scout 通过大语言模型（LLM）智能分析这些非结构化数据，自动提取出标准化的处理流程，帮助企业：
 
-- [Windows 部署指南](docs/WINDOWS_DEPLOYMENT.md) - 详细的 Windows 部署说明
+- 📚 **沉淀知识**：将隐性经验转化为可复用的结构化知识
+- 🚀 **提升效率**：新员工可通过标准化 SOP 快速上手
+- 🎯 **保证质量**：统一服务标准，减少人为差异
+- 🤖 **智能客服**：为 AI 客服系统提供高质量训练数据
 
-## 快速开始
+### ✨ 核心特性
 
-### 1. 环境要求
+| 特性 | 说明 |
+|-----|------|
+| 🚀 **高性能批量处理** | ThreadPoolExecutor 实现 50+ 文件/秒并发处理 |
+| 🧠 **AI 智能提取** | 基于 LLM 理解对话上下文，提取结构化 SOP |
+| 🔒 **隐私保护** | 自动识别并过滤电话、身份证、密码等敏感信息 |
+| 📊 **质量检测** | 内置噪声过滤，自动拒绝低质量对话 |
+| 🔌 **火山引擎兼容** | 输出标准 JSONL 格式，直接对接知识库 |
+| 🛠️ **简单易用** | 极简 CLI 接口，一行命令完成提取 |
+
+### 📋 支持的问题分类
+
+| 分类 | 描述 |
+|-----|------|
+| **ACCOUNT** | 注册/登录/密码/绑定/解绑/注销/找回 |
+| **RECHARGE** | 充值/黑金/订单/补发/退款/购买 |
+| **BUG** | 闪退/卡顿/显示异常/录像问题 |
+| **ACTIVITY** | 活动奖励/规则/赛季 |
+| **REPORT** | 外挂/昵称违规/不文明行为举报 |
+| **KNOWLEDGE** | 游戏内知识问答 |
+| **FEEDBACK** | 需要反馈给相关部门/等待官方消息 |
+
+### 🚀 快速开始
+
+#### 1. 环境要求
 
 - Python 3.12 或更高版本
 - pip 包管理器
+- LLM API Key（支持 OpenAI 兼容格式）
 
-### 2. 安装依赖
+#### 2. 安装
 
 ```bash
+# 克隆仓库
+git clone git@github.com:Dqz00116/sop-scout.git
+cd sop-scout
+
+# 创建虚拟环境（推荐）
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+# 或 venv\Scripts\activate  # Windows
+
+# 安装依赖
 pip install -r requirements.txt
 ```
 
-### 3. 配置 LLM API Key
-
-创建或编辑环境变量配置文件：
-
-**方式一：使用 .env 文件**
-
-在项目根目录创建 `.env` 文件：
+#### 3. 配置 API Key
 
 ```bash
-# LLM API 配置
-LLM_API_KEY=your_api_key_here
-LLM_BASE_URL=https://api.example.com/v1
-
-# 对象存储配置（如果使用）
-S3_ENDPOINT=https://s3.example.com
-S3_ACCESS_KEY=your_access_key
-S3_SECRET_KEY=your_secret_key
-S3_BUCKET=your_bucket_name
-
-# 并发配置（可选）
-SOP_CONCURRENCY=50
-SOP_BATCH_SIZE=10
-```
-
-**方式二：直接设置环境变量**
-
-```bash
+# 方式一：环境变量
 export LLM_API_KEY=your_api_key_here
 export LLM_BASE_URL=https://api.example.com/v1
+
+# 方式二：.env 文件（推荐）
+cp .env.example .env
+# 编辑 .env 文件填写你的 API Key
 ```
 
-**方式三：在代码中配置**
+#### 4. CLI 使用
 
-在 `config/extract_sop_cfg.json` 中配置模型信息：
+```bash
+# 基础用法
+python -m src.cli input.zip -o ./output/
+
+# 进阶用法（调整并发数）
+python -m src.cli input.zip -o ./output/ -c 100 -v
+
+# 批量处理（使用 GNU parallel）
+ls *.zip | parallel -j 4 "python -m src.cli {} -o ./output/{/.}/"
+```
+
+**CLI 参数说明：**
+
+| 参数 | 说明 | 默认值 |
+|-----|------|-------|
+| `input` | 输入 zip 文件路径 | 必填 |
+| `-o, --output` | 输出目录 | `./output/` |
+| `-c, --concurrency` | 并发线程数 | 50 |
+| `-v, --verbose` | 显示详细日志 | False |
+
+### 📤 输出格式
+
+#### JSONL 示例
+
+```json
+{
+  "id": "RECHARGE_订单问题_001",
+  "category": "RECHARGE",
+  "subcategory": "订单问题",
+  "when": {
+    "scenario": "用户反馈充值后未到账",
+    "keywords": ["充值", "未到账", "订单"],
+    "user_queries": ["我充的钱怎么没到账？", "充值失败了怎么办？"]
+  },
+  "then": {
+    "actions": ["查询订单状态", "核实支付渠道", "补发或退款"],
+    "response": "请您提供订单号，我帮您查询充值记录。如确认未到账，将为您补发。"
+  },
+  "notes": "需核实支付渠道是否为官方",
+  "source": "用户：我充了648但是没到账。客服：请您提供订单号..."
+}
+```
+
+#### 文件限制
+
+- 单个文件最大行数：30,000 行
+- 单行最大字符数：65,535 字符
+- 超过限制自动分割为多个文件
+
+### 🏗️ 架构设计
+
+```
+┌─────────────┐     ┌──────────────┐     ┌──────────────┐     ┌─────────────┐
+│  Input Zip  │────▶│ extract_files│────▶│batch_extract │────▶│merge_results│
+│  (聊天记录)  │     │   (解压提取)  │     │  (批量并行)   │     │  (合并输出)  │
+└─────────────┘     └──────────────┘     └──────┬───────┘     └──────┬──────┘
+                                                │                     │
+                                                ▼                     ▼
+                                         ┌──────────────┐      ┌─────────────┐
+                                         │  check_quality│      │  save_local │
+                                         │  filter_noise │      │  (CLI 输出) │
+                                         │filter_sensitive│     └─────────────┘
+                                         │  extract_sop  │
+                                         └──────────────┘
+```
+
+### 📁 项目结构
+
+```
+sop-scout/
+├── config/                    # 配置目录
+│   └── extract_sop_cfg.json  # LLM 提示词配置
+├── docs/                      # 文档目录
+│   ├── API.md                # HTTP API 文档
+│   ├── CLI_MVP_DESIGN.md     # CLI 设计文档
+│   └── WINDOWS_DEPLOYMENT.md # Windows 部署指南
+├── scripts/                   # 脚本目录
+│   ├── http_run.sh           # HTTP 服务启动
+│   └── local_run.sh          # 本地运行脚本
+├── src/                       # 源码目录
+│   ├── cli.py                # 🆕 CLI 入口（即将推出）
+│   ├── graphs/               # LangGraph 工作流
+│   │   ├── nodes/            # 处理节点
+│   │   ├── graph.py          # 主工作流
+│   │   └── state.py          # 状态定义
+│   ├── utils/                # 工具类
+│   └── main.py               # HTTP 服务入口
+├── requirements.txt           # 依赖列表
+└── README.md                  # 本文档
+```
+
+### ⚙️ 高级配置
+
+#### 并发配置
+
+```bash
+# 环境变量
+export SOP_CONCURRENCY=50        # 并发线程数（默认 50，最大 100）
+export SOP_BATCH_SIZE=10         # 每批处理文件数
+
+# CLI 参数覆盖
+python -m src.cli input.zip -c 100
+```
+
+#### 自定义模型
+
+编辑 `config/extract_sop_cfg.json`：
 
 ```json
 {
   "config": {
-    "model": "doubao-seed-2-0-pro-260215",
+    "model": "your-model-name",
     "temperature": 0.3,
-    "top_p": 0.7,
-    "max_completion_tokens": 2000,
-    "thinking": "disabled"
+    "max_completion_tokens": 16384
   },
-  "tools": [],
-  "sp": "你是SOP提取专家...",
-  "up": "请从以下聊天记录中提取SOP..."
+  "sp": "你的系统提示词...",
+  "up": "你的用户提示词..."
 }
 ```
 
-### 4. 本地部署步骤
+### 🔧 HTTP 服务模式（可选）
 
-#### 步骤 1: 启动 HTTP 服务
-
-```bash
-bash scripts/http_run.sh -m http -p 5000
-```
-
-或直接运行：
+如需使用 HTTP API 服务：
 
 ```bash
+# 启动服务
 python src/main.py --port 5000
-```
 
-服务启动后，会监听 `http://127.0.0.1:5000`
-
-#### 步骤 2: 验证服务状态
-
-```bash
-curl http://127.0.0.1:5000/
-```
-
-返回 `{"status": "ok"}` 表示服务正常
-
-#### 步骤 3: 调用接口
-
-参考 [API 文档](docs/API.md) 了解详细的接口说明
-
-## 运行流程
-
-### 本地运行
-
-运行完整工作流：
-
-```bash
-bash scripts/local_run.sh -m flow
-```
-
-运行单个节点：
-
-```bash
-bash scripts/local_run.sh -m node -n extract_files_node
-```
-
-### HTTP 服务
-
-启动 HTTP 服务：
-
-```bash
-bash scripts/http_run.sh -m http -p 5000
-```
-
-## 接口文档
-
-详细的接口说明请参考：[API 文档](docs/API.md)
-
-## 项目结构
-
-```
-├── config                          # 配置目录
-│   └── extract_sop_cfg.json       # LLM 配置文件
-├── docs                            # 文档目录
-│   └── API.md                      # API 接口文档
-├── scripts                         # 脚本目录
-│   ├── http_run.sh                 # HTTP 服务启动脚本
-│   └── local_run.sh                # 本地运行脚本
-├── src                             # 源码目录
-│   ├── agents                      # Agent 代码
-│   ├── graphs                      # 工作流编排
-│   │   ├── nodes                   # 节点实现
-│   │   ├── state.py                # 状态定义
-│   │   ├── loop_graph.py           # 循环子图
-│   │   └── graph.py                # 主图
-│   ├── main.py                     # 服务入口
-│   ├── storage                     # 存储相关
-│   ├── tests                       # 测试用例
-│   ├── tools                       # 工具定义
-│   └── utils                       # 工具类
-│       ├── cancel_manager.py       # 取消管理器
-│       └── progress_manager.py     # 进度管理器
-├── assets                          # 资源目录
-├── requirements.txt                # 依赖列表
-└── README.md                       # 项目说明
-```
-
-## 配置说明
-
-### 环境变量
-
-| 变量名 | 说明 | 默认值 |
-|--------|------|--------|
-| `LLM_API_KEY` | LLM API 密钥 | 必填 |
-| `LLM_BASE_URL` | LLM API 基础 URL | 必填 |
-| `SOP_CONCURRENCY` | 并发线程数 | 50 |
-| `SOP_BATCH_SIZE` | 批处理大小 | 10 |
-| `S3_ENDPOINT` | 对象存储端点 | 可选 |
-| `S3_ACCESS_KEY` | 对象存储访问密钥 | 可选 |
-| `S3_SECRET_KEY` | 对象存储密钥 | 可选 |
-| `S3_BUCKET` | 对象存储桶名 | 可选 |
-
-### 并发配置
-
-- `SOP_CONCURRENCY`: 并发处理文件的线程数，默认 50，最大 100
-- `SOP_BATCH_SIZE`: 每批处理的文件数，默认 10
-
-## 使用示例
-
-### 1. 创建测试数据
-
-创建包含聊天记录的 Zip 文件：
-
-```bash
-# 创建测试文件
-echo "用户：你好，我想充值" > chat1.txt
-echo "客服：请提供您的账号信息" >> chat1.txt
-
-# 打包成 Zip 文件
-zip -r chat_records.zip chat1.txt
-```
-
-### 2. 调用提取接口
-
-```bash
+# 调用接口
 curl -X POST http://127.0.0.1:5000/run \
   -H "Content-Type: application/json" \
-  -d '{
-    "zip_file": {
-      "url": "/path/to/chat_records.zip"
-    }
-  }'
-```
+  -d '{"zip_file": {"url": "/path/to/chat.zip"}}'
 
-### 3. 查询进度
-
-```bash
+# 查询进度
 curl http://127.0.0.1:5000/progress/{run_id}
 ```
 
-### 4. 取消任务
+详见 [API 文档](docs/API.md)
 
+### ❓ 常见问题
+
+**Q: 如何批量处理多个 zip 文件？**
+
+A: 使用 GNU parallel：
 ```bash
-curl -X POST http://127.0.0.1:5000/cancel/{run_id}
+ls *.zip | parallel -j 4 "python -m src.cli {} -o ./out/{/.}/"
 ```
 
-## 输出格式
+**Q: 如何处理 WSL 路径？**
 
-### JSONL 格式
-
-每行一个 JSON 对象，包含提取的 SOP 信息：
-
-```json
-{"question": "用户问题", "answer": "客服回答", "category": "问题分类"}
-{"question": "另一个问题", "answer": "另一个回答", "category": "问题分类"}
+A: 直接使用 Linux 风格路径：
+```bash
+python -m src.cli /mnt/e/data/1号.zip -o /mnt/e/output/
 ```
 
-### 文件限制
+**Q: 任务处理太慢？**
 
-- 最大行数：30,000 行
-- 单行最大字符数：65,535 字符
-- 超过限制时自动分割为多个文件
+A: 增加并发数（根据机器配置调整）：
+```bash
+python -m src.cli input.zip -c 100
+```
 
-## 常见问题
-
-### Q: 如何更换 LLM 模型？
+**Q: 如何更换 LLM 模型？**
 
 A: 编辑 `config/extract_sop_cfg.json` 文件，修改 `model` 字段。
 
-### Q: 如何调整并发数？
+### 🤝 贡献指南
 
-A: 设置环境变量 `SOP_CONCURRENCY`，例如：`export SOP_CONCURRENCY=100`
+欢迎提交 Issue 和 PR！
 
-### Q: 如何查看日志？
+### 📄 许可证
 
-A: 日志文件位于 `/app/work/logs/bypass/app.log`
+[MIT License](LICENSE)
 
-### Q: 任务超时怎么办？
+---
 
-A: 可以使用 `/cancel/{run_id}` 接口取消任务，或增加 `TIMEOUT_SECONDS` 环境变量。
+## English Docs
 
-## 相关文档
+### 📖 Introduction
 
-- [API 接口文档](docs/API.md)
-- [项目结构索引](AGENTS.md)
+**SOP Scout** is an intelligent **Standard Operating Procedure (SOP) extraction tool** designed to automatically mine and structure valuable knowledge assets from customer service chat records.
 
-## License
+In customer service scenarios, massive amounts of valuable handling experience are scattered across unstructured chat records. SOP Scout leverages Large Language Models (LLM) to intelligently analyze this data and automatically extract standardized procedures.
 
-MIT
+### ✨ Features
+
+- 🚀 **High Performance**: ThreadPoolExecutor for 50+ files/sec concurrent processing
+- 🧠 **AI-Powered**: LLM-based intelligent SOP extraction from conversation context
+- 🔒 **Privacy First**: Auto-identify and mask sensitive information (phone, ID, passwords)
+- 📊 **Quality Control**: Built-in noise filtering and quality detection
+- 🔌 **Compatible**: Standard JSONL output, direct integration with Volcano Engine KB
+- 🛠️ **Easy to Use**: Minimal CLI interface, one command to extract
+
+### 📋 Supported Categories
+
+| Category | Description |
+|---------|-------------|
+| **ACCOUNT** | Registration / Login / Password / Binding / Recovery |
+| **RECHARGE** | Recharge / Orders / Refunds / Purchase Issues |
+| **BUG** | Crashes / Lags / Display Issues / Recording Problems |
+| **ACTIVITY** | Event Rewards / Rules / Seasons |
+| **REPORT** | Cheating / Nickname Violations / Misconduct |
+| **KNOWLEDGE** | In-game Q&A |
+| **FEEDBACK** | Issues requiring escalation or pending response |
+
+### 🚀 Quick Start
+
+```bash
+# Clone repository
+git clone git@github.com:Dqz00116/sop-scout.git
+cd sop-scout
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Configure API key
+export LLM_API_KEY=your_api_key
+export LLM_BASE_URL=https://api.example.com/v1
+
+# Run extraction
+python -m src.cli input.zip -o ./output/
+```
+
+### 📄 License
+
+[MIT License](LICENSE)
+
+---
+
+<p align="center">
+  Made with ❤️ by SOP Scout Team
+</p>
