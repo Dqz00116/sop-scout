@@ -34,8 +34,9 @@ def preprocess_file(chat_file):
         # 创建空的RunnableConfig和Runtime
         empty_config = RunnableConfig()
         from langgraph.runtime import Runtime
-        from coze_coding_utils.runtime_ctx.context import Context
-        empty_runtime = Runtime[Context]()
+        from coze_coding_utils.runtime_ctx.context import new_context
+        ctx = new_context("preprocess")
+        empty_runtime = Runtime(context=ctx)
 
         check_result = check_quality_node(
             state=check_input,
