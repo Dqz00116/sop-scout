@@ -1,16 +1,17 @@
-from langchain_core.runnables import RunnableConfig
-from langgraph.runtime import Runtime
-from coze_coding_utils.runtime_ctx.context import Context
-from graphs.state import FilterContactSOPInput, FilterContactSPOutput
+#!/usr/bin/env python3
+"""过滤联系客服SOP节点 - 去扣子版
 
-def filter_contact_sop_node(state: FilterContactSOPInput, config: RunnableConfig, runtime: Runtime[Context]) -> FilterContactSPOutput:
+过滤掉引导玩家联系客服的SOP流程
+"""
+
+from src.graphs.state import FilterContactSOPInput, FilterContactSPOutput
+
+
+def filter_contact_sop_node(state: FilterContactSOPInput) -> FilterContactSPOutput:
     """
     title: 过滤联系客服SOP
     desc: 过滤掉引导玩家联系客服的SOP流程
-    integrations: 
     """
-    ctx = runtime.context
-    
     filtered_sop_list = []
     
     contact_keywords = [
@@ -24,7 +25,11 @@ def filter_contact_sop_node(state: FilterContactSOPInput, config: RunnableConfig
         '转人工',
         '人工服务',
         '客服协助',
-        '请联系我们'
+        '请联系我们',
+        '联系官方客服',
+        '客服微信',
+        '客服QQ',
+        '客服电话'
     ]
     
     for sop in state.sop_list:

@@ -1,25 +1,27 @@
+#!/usr/bin/env python3
+"""聚合结果节点 - 去扣子版
+
+将所有提取的SOP聚合为符合火山引擎知识库格式的JSONL文件
+"""
+
 import os
 import json
 import tempfile
-from langchain_core.runnables import RunnableConfig
-from langgraph.runtime import Runtime
-from coze_coding_utils.runtime_ctx.context import Context
-from graphs.state import MergeResultsInput, MergeResultsOutput
+from src.graphs.state import MergeResultsInput, MergeResultsOutput
 
-def merge_results_node(state: MergeResultsInput, config: RunnableConfig, runtime: Runtime[Context]) -> MergeResultsOutput:
+
+def merge_results_node(state: MergeResultsInput) -> MergeResultsOutput:
     """
     title: 聚合结果
     desc: 将所有提取的SOP聚合为符合火山引擎知识库格式的JSONL文件
-    integrations: 
     """
-    ctx = runtime.context
     
     # 火山引擎知识库格式限制
     MAX_LINES_PER_FILE = 30000
     MAX_CHARS_PER_LINE = 65535
     
     accumulated_sops = []
-    jsonl_files = []
+    jsonl_file_urls = []
     file_index = 1
     
     for sop in state.all_sops:
@@ -51,16 +53,17 @@ def merge_results_node(state: MergeResultsInput, config: RunnableConfig, runtime
         # 检查是否达到文件行数限制
         if len(accumulated_sops) >= MAX_LINES_PER_FILE:
             jsonl_file_path = _save_jsonl_file(accumulated_sops, file_index)
-            jsonl_files.append(jsonl_file_path)
+            jsonl_file_urls.append(jsonl_file_path)
             accumulated_sops = []
             file_index += 1
     
     # 保存剩余的SOP
     if accumulated_sops:
         jsonl_file_path = _save_jsonl_file(accumulated_sops, file_index)
-        jsonl_files.append(jsonl_file_path)
+        jsonl_file_urls.append(jsonl_file_path)
     
-    return MergeResultsOutput(jsonl_files=jsonl_files)
+    return MergeResultsOutput(jsonl_file_urls=jsonl_file_urls)
+
 
 def _save_jsonl_file(sops, file_index):
     """保存JSONL文件"""

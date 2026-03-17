@@ -1,16 +1,18 @@
-import re
-from langchain_core.runnables import RunnableConfig
-from langgraph.runtime import Runtime
-from coze_coding_utils.runtime_ctx.context import Context
-from graphs.state import FilterSensitiveInput, FilterSensitiveOutput
+#!/usr/bin/env python3
+"""敏感信息过滤节点 - 去扣子版
 
-def filter_sensitive_node(state: FilterSensitiveInput, config: RunnableConfig, runtime: Runtime[Context]) -> FilterSensitiveOutput:
+过滤聊天记录中的敏感信息（电话、身份证、密码、地址、游戏账号、卡牌等级、昵称、IP等）
+"""
+
+import re
+from src.graphs.state import FilterSensitiveInput, FilterSensitiveOutput
+
+
+def filter_sensitive_node(state: FilterSensitiveInput) -> FilterSensitiveOutput:
     """
     title: 敏感信息过滤
     desc: 过滤聊天记录中的敏感信息（电话、身份证、密码、地址、游戏账号、卡牌等级、昵称、IP等）
-    integrations: 
     """
-    ctx = runtime.context
     
     patterns = {
         'phone': r'1[3-9]\d{9}',

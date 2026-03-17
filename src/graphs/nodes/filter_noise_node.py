@@ -1,16 +1,18 @@
-from langchain_core.runnables import RunnableConfig
-from langgraph.runtime import Runtime
-from coze_coding_utils.runtime_ctx.context import Context
-from utils.file.file import FileOps
-from graphs.state import FilterNoiseInput, FilterNoiseOutput
+#!/usr/bin/env python3
+"""噪声过滤节点 - 去扣子版
 
-def filter_noise_node(state: FilterNoiseInput, config: RunnableConfig, runtime: Runtime[Context]) -> FilterNoiseOutput:
+过滤聊天记录中的噪声段落（问候语、闲聊等无效对话）
+"""
+
+from src.utils.file.file import FileOps
+from src.graphs.state import FilterNoiseInput, FilterNoiseOutput
+
+
+def filter_noise_node(state: FilterNoiseInput) -> FilterNoiseOutput:
     """
     title: 噪声过滤
     desc: 过滤聊天记录中的噪声段落（问候语、闲聊等无效对话）
-    integrations: 
     """
-    ctx = runtime.context
     
     # 读取文件内容
     content = FileOps.extract_text(state.chat_file)

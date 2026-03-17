@@ -1,6 +1,6 @@
 from typing import List, Literal, Optional
 from pydantic import BaseModel, Field
-from utils.file.file import File
+from src.utils.file.file import File
 
 class GlobalState(BaseModel):
     """全局状态定义"""
@@ -101,7 +101,7 @@ class MergeResultsInput(BaseModel):
 # 聚合结果节点的输出
 class MergeResultsOutput(BaseModel):
     """聚合结果节点的输出"""
-    jsonl_files: List[str] = Field(default=[], description="生成的JSONL文件本地路径列表")
+    jsonl_file_urls: List[str] = Field(default=[], description="生成的JSONL文件本地路径列表")
 
 # 文件上传节点的输入
 class UploadFilesInput(BaseModel):

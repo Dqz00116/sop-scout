@@ -1,17 +1,19 @@
-import re
-from langchain_core.runnables import RunnableConfig
-from langgraph.runtime import Runtime
-from coze_coding_utils.runtime_ctx.context import Context
-from utils.file.file import FileOps
-from graphs.state import CheckQualityInput, CheckQualityOutput
+#!/usr/bin/env python3
+"""质量检测节点 - 去扣子版
 
-def check_quality_node(state: CheckQualityInput, config: RunnableConfig, runtime: Runtime[Context]) -> CheckQualityOutput:
+检测聊天记录的质量，判断是否包含有效的客服对话内容
+"""
+
+import re
+from src.utils.file.file import FileOps
+from src.graphs.state import CheckQualityInput, CheckQualityOutput
+
+
+def check_quality_node(state: CheckQualityInput) -> CheckQualityOutput:
     """
     title: 质量检测
     desc: 检测聊天记录的质量，判断是否包含有效的客服对话内容
-    integrations: 
     """
-    ctx = runtime.context
     
     # 读取文件内容
     content = FileOps.extract_text(state.chat_file)

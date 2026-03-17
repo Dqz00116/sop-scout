@@ -1,21 +1,23 @@
+#!/usr/bin/env python3
+"""解压并提取聊天记录文件节点 - 去扣子版
+
+从zip文件中提取所有.txt格式的聊天记录文件
+"""
+
 import os
 import zipfile
 import tempfile
 from typing import List
 import urllib.request
-from langchain_core.runnables import RunnableConfig
-from langgraph.runtime import Runtime
-from coze_coding_utils.runtime_ctx.context import Context
-from utils.file.file import File
-from graphs.state import ExtractFilesInput, ExtractFilesOutput
+from src.utils.file.file import File
+from src.graphs.state import ExtractFilesInput, ExtractFilesOutput
 
-def extract_files_node(state: ExtractFilesInput, config: RunnableConfig, runtime: Runtime[Context]) -> ExtractFilesOutput:
+
+def extract_files_node(state: ExtractFilesInput) -> ExtractFilesOutput:
     """
     title: 解压并提取聊天记录文件
     desc: 从zip文件中提取所有.txt格式的聊天记录文件
-    integrations: 
     """
-    ctx = runtime.context
     
     # 创建临时解压目录
     extract_dir = tempfile.mkdtemp(prefix="chat_extract_")
