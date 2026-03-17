@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
-"""SOP Scout CLI - 去扣子简化版
+"""SOP Scout CLI - 面向开发者的简洁版本
 
-极简 CLI 工具，使用标准 OpenAI API（Moonshot/Kimi）
+极简 CLI 工具，支持 Moonshot/Kimi、豆包等多 LLM Provider
 """
 
 import argparse
 import os
 import sys
 import shutil
+import logging
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -19,10 +20,20 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 from src.utils.file.file import File
+from src.utils.llm_config import get_llm_config
 from src.graphs.simple_graph import simple_graph
 
 
-def process_zip(zip_path: str, output_dir: str, concurrency: int, verbose: bool):
+# 配置日志
+logging.basicConfig(
+    level=logging.INFO,
+    format='[%(levelname)s] %(message)s',
+    handlers=[logging.StreamHandler(sys.stderr)]
+)
+logger = logging.getLogger(__name__)
+
+
+def process_zip(zip_path: str, output_dir: str, verbose: bool):
     """处理单个 zip 文件"""
     
     # 确保路径绝对化
@@ -31,20 +42,22 @@ def process_zip(zip_path: str, output_dir: str, concurrency: int, verbose: bool)
     
     # 检查输入文件
     if not os.path.exists(zip_path):
-        print(f"❌ 错误: 文件不存在: {zip_path}", file=sys.stderr)
+        print(f"Error: File not found: {zip_path}", file=sys.stderr)
         sys.exit(1)
     
     # 创建输出目录
     os.makedirs(output_dir, exist_ok=True)
     
-    # 设置并发数
-    os.environ["SOP_CONCURRENCY"] = str(concurrency)
+    # 加载配置
+    llm_config = get_llm_config()
+    concurrency = int(os.getenv("SOP_CONCURRENCY", "50"))
     
     if verbose:
-        print(f"📁 处理文件: {zip_path}")
-        print(f"📂 输出目录: {output_dir}")
-        print(f"⚡ 并发数: {concurrency}")
-        print(f"🤖 使用模型: {os.getenv('LLM_MODEL', 'kimi-k2-0711-preview')}")
+        print(f"Input: {zip_path}", file=sys.stderr)
+        print(f"Output: {output_dir}", file=sys.stderr)
+        print(f"Model: {llm_config.model} ({llm_config.provider})", file=sys.stderr)
+        print(f"Concurrency: {concurrency}", file=sys.stderr)
+        print("", file=sys.stderr)
     
     try:
         # 同步调用工作流
@@ -54,13 +67,11 @@ def process_zip(zip_path: str, output_dir: str, concurrency: int, verbose: bool)
         
         # 移动结果文件到输出目录
         jsonl_files = result.get("jsonl_file_urls", [])
-        
-        # 过滤掉可能的 http URL，只保留本地文件路径
         jsonl_files = [f for f in jsonl_files if f and not f.startswith('http')]
         
         if not jsonl_files:
-            print("⚠️ 警告: 未生成任何输出文件", file=sys.stderr)
-            return
+            print("Warning: No output files generated", file=sys.stderr)
+            sys.exit(1)
         
         moved_files = []
         for src_path in jsonl_files:
@@ -69,80 +80,79 @@ def process_zip(zip_path: str, output_dir: str, concurrency: int, verbose: bool)
             filename = os.path.basename(src_path)
             dst_path = os.path.join(output_dir, filename)
             
-            # 如果目标已存在，先删除
             if os.path.exists(dst_path):
                 os.remove(dst_path)
             
             shutil.move(src_path, dst_path)
             moved_files.append(dst_path)
-            print(f"✅ {dst_path}")
+            print(dst_path)  # 标准输出，供脚本解析
         
         if verbose:
-            print(f"\n🎉 完成: 共生成 {len(moved_files)} 个文件")
+            print(f"\nDone: {len(moved_files)} file(s) generated", file=sys.stderr)
             
     except Exception as e:
-        print(f"❌ 错误: {e}", file=sys.stderr)
+        print(f"Error: {e}", file=sys.stderr)
         if verbose:
             import traceback
-            traceback.print_exc()
+            traceback.print_exc(file=sys.stderr)
         sys.exit(1)
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="SOP Scout - 从客服聊天记录中提取结构化 SOP",
+        description="SOP Scout - Extract SOP from customer service chat records",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
-示例:
-  python -m src.cli_simple 1号.zip -o ./output/
-  python -m src.cli_simple /mnt/e/data/chat.zip -o ./out/ -c 100 -v
+Examples:
+  python -m src.cli_simple input.zip -o ./output/
+  python -m src.cli_simple input.zip -o ./output/ -v
 
-环境变量:
-  LLM_API_KEY       API 密钥 (必需)
-  LLM_BASE_URL      API 基础 URL (默认: https://api.moonshot.cn/v1)
-  SOP_CONCURRENCY   并发线程数 (默认: 50)
-  SOP_BATCH_SIZE    批处理大小 (默认: 10)
+Environment Variables:
+  LLM_API_KEY / ARK_API_KEY / OPENAI_API_KEY  API key for LLM provider
+  SOP_CONCURRENCY                               Concurrent threads (default: 50)
+  SOP_BATCH_SIZE                                Batch size (default: 10)
+
+Available Models:
+  Run: python -c "from src.utils.llm_config import print_models; print_models()"
         """
     )
     
     parser.add_argument(
         "input",
-        help="输入 zip 文件路径"
+        help="Input zip file path"
     )
     
     parser.add_argument(
         "-o", "--output",
         default="./output",
-        help="输出目录（默认: ./output）"
-    )
-    
-    parser.add_argument(
-        "-c", "--concurrency",
-        type=int,
-        default=50,
-        help="并发线程数（默认: 50）"
+        help="Output directory (default: ./output)"
     )
     
     parser.add_argument(
         "-v", "--verbose",
         action="store_true",
-        help="显示详细日志"
+        help="Show detailed logs"
     )
     
     args = parser.parse_args()
     
-    # 检查 API 密钥
-    if not os.getenv("LLM_API_KEY"):
-        print("❌ 错误: 未设置 LLM_API_KEY 环境变量", file=sys.stderr)
-        print("请在 .env 文件中设置或导出环境变量:", file=sys.stderr)
-        print("  export LLM_API_KEY=your_api_key", file=sys.stderr)
+    # 检查 API key
+    try:
+        config = get_llm_config()
+        if not config.api_key:
+            raise ValueError("API key not found")
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        print("Please set environment variable:", file=sys.stderr)
+        print("  export LLM_API_KEY=sk-xxx        # For Moonshot", file=sys.stderr)
+        print("  export ARK_API_KEY=sk-xxx        # For Doubao", file=sys.stderr)
+        print("  export OPENAI_API_KEY=sk-xxx     # For OpenAI", file=sys.stderr)
         sys.exit(1)
     
     # 运行处理
     process_zip(
         zip_path=args.input,
         output_dir=args.output,
-        concurrency=args.concurrency,
         verbose=args.verbose
     )
 
