@@ -15,8 +15,10 @@ from src.graphs.nodes.merge_results_node import merge_results_node
 
 
 def log_progress(message: str):
-    """打印进度信息"""
-    print(f"[PROGRESS] {message}", file=sys.stderr, flush=True)
+    """打印进度信息（带时间戳）"""
+    from datetime import datetime
+    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    print(f"[{timestamp}] [PROGRESS] {message}", file=sys.stderr, flush=True)
 
 
 def extract_files_with_log(state: GlobalState) -> dict:

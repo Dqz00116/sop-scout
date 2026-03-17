@@ -22,8 +22,10 @@ logger = logging.getLogger(__name__)
 
 
 def log_progress(message: str):
-    """打印进度信息到 stderr"""
-    print(f"[PROGRESS] {message}", file=sys.stderr, flush=True)
+    """打印进度信息到 stderr（带时间戳）"""
+    from datetime import datetime
+    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    print(f"[{timestamp}] [PROGRESS] {message}", file=sys.stderr, flush=True)
 
 
 def preprocess_file(chat_file):

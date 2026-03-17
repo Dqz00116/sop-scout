@@ -24,10 +24,11 @@ from src.utils.llm_config import get_llm_config
 from src.graphs.simple_graph import simple_graph
 
 
-# 配置日志
+# 配置日志（带时间戳）
 logging.basicConfig(
     level=logging.INFO,
-    format='[%(levelname)s] %(message)s',
+    format='[%(asctime)s] [%(levelname)s] %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S',
     handlers=[logging.StreamHandler(sys.stderr)]
 )
 logger = logging.getLogger(__name__)

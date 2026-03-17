@@ -13,6 +13,7 @@ __pycache__/
 /.env
 .env
 /test*
+/output*
 
 # 视频文件
 *.mp4
